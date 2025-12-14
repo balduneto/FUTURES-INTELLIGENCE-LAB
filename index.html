@@ -1,426 +1,505 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, AreaChart, Area, ComposedChart, Line
-} from 'recharts';
-import { 
-  Factory, Globe, Cpu, Users, Zap, TrendingUp, AlertTriangle, 
-  ArrowRight, Leaf, ShieldCheck, Box, Info, BookOpen, Lightbulb, 
-  ChevronDown, ChevronUp, Share2, Anchor
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Futures Intelligence Lab | Dashboard Educativo 2035</title>
+    
+    <!-- 1. CARREGAMENTO DO ESTILO (TAILWIND CSS) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. CONFIGURAÇÃO DE FONTE (Inter para UI, JetBrains Mono para Dados) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        slate: { 950: '#020617' }
+                    }
+                }
+            }
+        }
+    </script>
 
-/**
- * DASHBOARD FORESIGHT ESTRATÉGICO V3 - PRODUCTION READY
- * * Arquitetura: Single Component React
- * Compatibilidade: Totalmente compatível com GitHub Pages / Static Hosting.
- * Dependências: lucide-react, recharts, tailwindcss.
- * * NOTA: Este arquivo contém todos os dados e lógica. Não requer backend.
- */
+    <!-- 3. BIBLIOTECAS (React, Recharts, PropTypes) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-// --- TEMA VISUAL ---
-const theme = {
-  bg: 'bg-slate-950',
-  card: 'bg-slate-900',
-  cardHover: 'hover:bg-slate-800',
-  border: 'border-slate-800',
-  accent: 'text-indigo-400',
-  accentBg: 'bg-indigo-500',
-  textMain: 'text-slate-100',
-  textMuted: 'text-slate-400',
-  gradientPrimary: 'from-indigo-600 to-sky-600'
-};
-
-// --- BASE DE DADOS ESTRATÉGICA (HARDCODED PARA SEGURANÇA) ---
-
-const dbParadigm = [
-  { subject: 'Custo/Eficiência', A: 100, B: 60, fullMark: 100, tooltip: 'Foco total em margem (4.0)' },
-  { subject: 'Resiliência', A: 20, B: 100, fullMark: 100, tooltip: 'Capacidade de absorver choques (5.0)' },
-  { subject: 'Bem-estar Humano', A: 30, B: 90, fullMark: 100, tooltip: 'Tecnologia adaptada ao usuário' },
-  { subject: 'Sustentabilidade', A: 40, B: 100, fullMark: 100, tooltip: 'Regeneração vs Extração' },
-  { subject: 'Customização', A: 50, B: 95, fullMark: 100, tooltip: 'Lotes unitários viáveis' },
-];
-
-const dbDeepTech = [
-  { year: '2023', genAI: 15, digitalTwins: 30, impact: 'Baixo' },
-  { year: '2025', genAI: 45, digitalTwins: 55, impact: 'Moderado' },
-  { year: '2027', genAI: 75, digitalTwins: 80, impact: 'Transformador' },
-  { year: '2030', genAI: 95, digitalTwins: 90, impact: 'Onipresente' },
-];
-
-const dbGeo = [
-  { name: 'México', logistica: 95, energia: 40, estabilidade: 65, label: 'Nearshoring (Velocidade)' },
-  { name: 'Brasil', logistica: 60, energia: 95, estabilidade: 70, label: 'Powershoring (Verde)' },
-  { name: 'Vietnã', logistica: 50, energia: 45, estabilidade: 60, label: 'Offshoring Alt.' },
-];
-
-const dbLabor = [
-  { name: 'Repetitivo Manual', val: -40, type: 'declining' },
-  { name: 'Controle Visual', val: -35, type: 'declining' },
-  { name: 'Gestão de IA', val: 65, type: 'rising' },
-  { name: 'Resolução Complexa', val: 50, type: 'rising' },
-  { name: 'Design de Prompt', val: 80, type: 'rising' },
-];
-
-// --- COMPONENTES DE UI REUTILIZÁVEIS ---
-
-const InsightCard = ({ title, children, type = 'info' }: { title: string, children: React.ReactNode, type?: 'info' | 'alert' | 'success' }) => {
-  const [isOpen, setIsOpen] = useState(true);
-  
-  const colors = {
-    info: 'border-indigo-500/30 bg-indigo-900/10 text-indigo-300',
-    alert: 'border-amber-500/30 bg-amber-900/10 text-amber-300',
-    success: 'border-emerald-500/30 bg-emerald-900/10 text-emerald-300'
-  };
-
-  return (
-    <div className={`mt-6 border rounded-lg overflow-hidden transition-all duration-300 ${colors[type]}`}>
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
-      >
-        <div className="flex items-center gap-2 font-semibold">
-          {type === 'alert' ? <AlertTriangle className="w-5 h-5" /> : <Lightbulb className="w-5 h-5" />}
-          <span>INSIGHT ESTRATÉGICO: {title}</span>
-        </div>
-        {isOpen ? <ChevronUp className="w-5 h-5 opacity-70" /> : <ChevronDown className="w-5 h-5 opacity-70" />}
-      </button>
-      {isOpen && (
-        <div className="p-4 pt-0 text-slate-300 text-sm leading-relaxed border-t border-white/5 animate-in slide-in-from-top-2">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const SourceRef = ({ id, text }: { id: string, text: string }) => (
-  <div className="flex items-center gap-1.5 mt-2 text-[10px] text-slate-500 font-mono uppercase tracking-wide opacity-70 hover:opacity-100 transition-opacity cursor-help" title="Fonte Verificada">
-    <BookOpen className="w-3 h-3" />
-    <span>[{id}] {text}</span>
-  </div>
-);
-
-const MetricCard = ({ label, value, sub, icon: Icon, trend }: any) => (
-  <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 hover:border-indigo-500/50 transition-all group">
-    <div className="flex justify-between items-start mb-4">
-      <div className="p-2 bg-slate-800 rounded-lg group-hover:bg-indigo-500/20 transition-colors">
-        <Icon className="w-5 h-5 text-slate-400 group-hover:text-indigo-400" />
-      </div>
-      {trend && <span className="text-xs font-bold text-emerald-400 bg-emerald-900/20 px-2 py-1 rounded">{trend}</span>}
-    </div>
-    <div className="text-2xl font-bold text-white mb-1">{value}</div>
-    <div className="text-sm text-slate-400">{label}</div>
-    {sub && <div className="text-xs text-slate-500 mt-2 pt-2 border-t border-slate-800">{sub}</div>}
-  </div>
-);
-
-// --- COMPONENTE PRINCIPAL ---
-
-export default function DashboardForesightV3() {
-  const [activeTab, setActiveTab] = useState('paradigm');
-  const [mounted, setMounted] = useState(false);
-
-  // Efeito para garantir renderização correta no cliente
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return <div className="bg-slate-950 min-h-screen"></div>;
-
-  return (
-    <div className={`min-h-screen ${theme.bg} text-slate-100 font-sans selection:bg-indigo-500 selection:text-white pb-20`}>
-      
-      {/* --- HEADER --- */}
-      <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 shadow-2xl shadow-black/20">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br ${theme.gradientPrimary} shadow-lg shadow-indigo-500/20`}>
-              <Globe className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-white leading-none">HORIZONTE 2035</h1>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-[10px] bg-indigo-500/10 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/20 font-mono">V3.0 STABLE</span>
-                <span className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">Foresight Industrial</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-4">
-             {/* Simulação de controles */}
-             <div className="hidden md:flex gap-6 text-xs text-slate-500 font-mono items-center">
-                <span>DADOS: <b className="text-slate-300">EMBARCADOS</b></span>
-                <span>MODO: <b className="text-slate-300">OFFLINE-READY</b></span>
-             </div>
-          </div>
-        </div>
-      </header>
-
-      {/* --- NAV --- */}
-      <nav className="max-w-7xl mx-auto px-4 mt-8 mb-10">
-        <div className="p-1 bg-slate-900/50 rounded-xl border border-slate-800 inline-flex flex-wrap gap-1 w-full md:w-auto">
-          {[
-            { id: 'paradigm', label: 'Indústria 5.0', icon: Box },
-            { id: 'deeptech', label: 'Deep Tech & IA', icon: Cpu },
-            { id: 'geo', label: 'Nova Geopolítica', icon: Anchor },
-            { id: 'work', label: 'Talento Humano', icon: Users },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                activeTab === tab.id 
-                  ? 'bg-slate-800 text-white shadow-lg shadow-black/20 ring-1 ring-slate-700' 
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
-              }`}
-            >
-              <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-indigo-400' : ''}`} />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      {/* --- MAIN CONTENT --- */}
-      <main className="max-w-7xl mx-auto px-4 animate-in fade-in duration-500">
+    <style>
+        /* Estilização High Contrast */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; border: 1px solid #1e293b; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        body { background-color: #020617; color: #f8fafc; }
         
-        {/* === ABA 1: PARADIGMA === */}
-        {activeTab === 'paradigm' && (
-          <div className="space-y-8">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div className="space-y-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-bold border border-indigo-500/20">
-                  <TrendingUp className="w-3 h-3" /> TRANSIÇÃO SISTÊMICA
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
-                  Do <span className="text-slate-500 line-through decoration-red-500/50 decoration-2">Just-in-Time</span> para o <span className="text-indigo-400">Just-in-Case</span>
-                </h2>
-                <p className="text-slate-400 text-lg leading-relaxed">
-                  A eficiência a qualquer custo colapsou. O novo imperativo industrial não é mais "produzir o mais barato possível", mas "garantir que a produção nunca pare", mesmo diante de crises globais.
-                </p>
-                
-                <div className="grid grid-cols-2 gap-4">
-                   <MetricCard label="Eficiência vs Resiliência" value="60/40" sub="Novo balanço ideal de KPIs" icon={Zap} />
-                   <MetricCard label="Adoção ESG" value="+210%" sub="Crescimento em 3 anos" icon={Leaf} trend="Alta" />
-                </div>
+        /* Utilitário para texto didático */
+        .didactic-text strong { color: #818cf8; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-                <SourceRef id="EU-2024" text="Comissão Europeia: Industry 5.0 - Towards a sustainable, human-centric industry" />
-              </div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { 
+            Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer,
+            AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, 
+            Cell, LabelList 
+        } = Recharts;
 
-              <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 relative">
-                <div className="absolute top-4 right-4 text-xs text-slate-500 font-mono">RADAR ESTRATÉGICO</div>
-                <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={dbParadigm}>
-                      <PolarGrid stroke="#334155" />
-                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 12 }} />
-                      <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#334155" tick={false} />
-                      <Radar name="Indústria 4.0 (Passado)" dataKey="A" stroke="#64748b" strokeDasharray="4 4" fill="#64748b" fillOpacity={0.1} />
-                      <Radar name="Indústria 5.0 (Futuro)" dataKey="B" stroke="#6366f1" fill="#6366f1" fillOpacity={0.5} />
-                      <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#fff' }}
-                        itemStyle={{ color: '#e2e8f0' }}
-                      />
-                    </RadarChart>
-                  </ResponsiveContainer>
+        // --- CONSTANTES VISUAIS (ALTO CONTRASTE) ---
+        const COLORS = {
+            bg: "#020617",
+            cardBg: "#0f172a",
+            border: "#334155",
+            textMain: "#f8fafc",
+            textMuted: "#cbd5e1",
+            accent: "#6366f1",
+            grid: "#334155",
+            success: "#10b981",
+            danger: "#ef4444"
+        };
+
+        // --- ÍCONES ---
+        const Icons = {
+            Globe: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+            Cpu: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>,
+            Users: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+            Box: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/></svg>,
+            Anchor: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" x2="12" y1="22" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>,
+            Zap: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+            Leaf: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 4 8 1.55 1.5-5.8 5.26-6.6 6.55-2.2 3.5.5 7 1.6 7.45C16.5 24 16.6 22.32 15 20c-1.6-2.3-3.6-2.9-4-3-3.1.2-5 2.1-5 2.1Z"/><path d="M11 20a15 15 0 0 1-1-6 7 7 0 0 1 4-3"/></svg>,
+            Info: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>,
+            BookOpen: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+            Lightbulb: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="9" x2="15" y1="18" y2="18"/><line x1="10" x2="14" y1="22" y2="22"/><path d="M15.09 14c.18-.9.27-1.48.35-2.5a6 6 0 0 0-12 0c0 1.02.08 1.6.25 2.5a3 3 0 0 1-.29 2.1l-.87 2.25A2 2 0 0 0 4.45 21h15.1a2 2 0 0 0 1.9-2.65l-.87-2.25a3 3 0 0 1-.29-2.1z"/></svg>,
+            TrendingUp: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        };
+
+        // --- DADOS ---
+        const dbParadigm = [
+          { subject: 'Custo/Eficiência', A: 100, B: 60, fullMark: 100 },
+          { subject: 'Resiliência', A: 20, B: 100, fullMark: 100 },
+          { subject: 'Bem-estar Humano', A: 30, B: 90, fullMark: 100 },
+          { subject: 'Sustentabilidade', A: 40, B: 100, fullMark: 100 },
+          { subject: 'Customização', A: 50, B: 95, fullMark: 100 },
+        ];
+
+        const dbDeepTech = [
+          { year: '2023', genAI: 15, digitalTwins: 30 },
+          { year: '2025', genAI: 45, digitalTwins: 55 },
+          { year: '2027', genAI: 75, digitalTwins: 80 },
+          { year: '2030', genAI: 95, digitalTwins: 90 },
+        ];
+
+        const dbGeo = [
+          { name: 'México', logistica: 95, energia: 40, label: 'Nearshoring' },
+          { name: 'Brasil', logistica: 60, energia: 95, label: 'Powershoring' },
+          { name: 'Vietnã', logistica: 50, energia: 45, label: 'Offshoring' },
+        ];
+        
+        const dbLabor = [
+          { name: 'Repetitivo (Manual)', val: -40 },
+          { name: 'Controle Visual', val: -35 },
+          { name: 'Gestão de IA', val: 65 },
+          { name: 'Resolução Complexa', val: 50 },
+        ];
+
+        // --- NOVOS COMPONENTES DIDÁTICOS ---
+
+        const SectionIntro = ({ title, subtitle, children }) => (
+            <div className="mb-8 border-l-4 border-indigo-500 pl-6 py-2">
+                <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">{title}</h2>
+                <h3 className="text-xl text-indigo-400 font-semibold mb-4">{subtitle}</h3>
+                <div className="text-slate-300 text-lg leading-relaxed max-w-4xl didactic-text space-y-3">
+                    {children}
                 </div>
-              </div>
             </div>
+        );
 
-            <InsightCard title="A Economia da Redundância">
-              Antigamente, ter dois fornecedores para a mesma peça era visto como "desperdício". Hoje, é visto como "seguro operacional". Empresas que investiram em redundância de supply chain recuperaram o investimento em média <strong>4x mais rápido</strong> durante interrupções logísticas em 2024. A sustentabilidade também virou lucro: o uso de Passaportes Digitais de Produtos (DPP) aumentou a retenção de clientes B2B em 15%.
-            </InsightCard>
-          </div>
-        )}
-
-        {/* === ABA 2: DEEP TECH === */}
-        {activeTab === 'deeptech' && (
-          <div className="space-y-8">
-            <div className="bg-gradient-to-r from-slate-900 to-slate-900/50 border border-slate-800 rounded-2xl p-8">
-              <div className="flex flex-col md:flex-row gap-8 justify-between items-start mb-8">
-                <div>
-                   <h2 className="text-2xl font-bold text-white mb-2">Convergência Deep Tech</h2>
-                   <p className="text-slate-400 max-w-xl">
-                     A fusão de IA Generativa com Gêmeos Digitais está reduzindo o tempo de prototipagem física em até 90%. Não é evolução, é disrupção.
-                   </p>
-                </div>
-                <div className="flex gap-2">
-                  <span className="px-3 py-1 rounded bg-pink-500/10 text-pink-400 border border-pink-500/20 text-xs font-bold">GEN AI</span>
-                  <span className="px-3 py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-bold">DIGITAL TWINS</span>
-                </div>
-              </div>
-
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={dbDeepTech} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorGenAI" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#ec4899" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#ec4899" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="colorDT" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="year" stroke="#475569" />
-                    <YAxis stroke="#475569" />
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
-                    <Area type="monotone" dataKey="genAI" name="Adoção de GenAI (%)" stroke="#ec4899" fillOpacity={1} fill="url(#colorGenAI)" strokeWidth={3} />
-                    <Area type="monotone" dataKey="digitalTwins" name="Gêmeos Digitais (%)" stroke="#3b82f6" fillOpacity={1} fill="url(#colorDT)" strokeWidth={3} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-              <SourceRef id="GARTNER-24" text="Gartner: Top Strategic Technology Trends for 2024" />
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-               <div className="bg-slate-900 p-6 rounded-xl border border-slate-800">
-                  <Cpu className="w-8 h-8 text-pink-500 mb-4" />
-                  <h3 className="font-bold text-white mb-2">Design Generativo</h3>
-                  <p className="text-sm text-slate-400">A IA cria milhares de variações de peças otimizadas para peso e custo em segundos, algo impossível para um humano.</p>
-               </div>
-               <div className="bg-slate-900 p-6 rounded-xl border border-slate-800">
-                  <Box className="w-8 h-8 text-blue-500 mb-4" />
-                  <h3 className="font-bold text-white mb-2">Comissionamento Virtual</h3>
-                  <p className="text-sm text-slate-400">Testar robôs e linhas de montagem inteiras em ambiente virtual (NVIDIA Omniverse) antes de apertar um único parafuso real.</p>
-               </div>
-               <div className="bg-slate-900 p-6 rounded-xl border border-slate-800">
-                  <ShieldCheck className="w-8 h-8 text-emerald-500 mb-4" />
-                  <h3 className="font-bold text-white mb-2">Manutenção Preditiva AI</h3>
-                  <p className="text-sm text-slate-400">Algoritmos que "ouvem" as máquinas e preveem falhas com semanas de antecedência, eliminando paradas não planejadas.</p>
-               </div>
-            </div>
-          </div>
-        )}
-
-        {/* === ABA 3: GEOPOLÍTICA === */}
-        {activeTab === 'geo' && (
-          <div className="space-y-8">
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <h2 className="text-2xl font-bold text-white mb-4">A Geografia da Confiança</h2>
-                <p className="text-slate-400 mb-6 leading-relaxed">
-                  A globalização irrestrita acabou. As cadeias de suprimento estão sendo redesenhadas baseadas em dois vetores: <strong>Proximidade (Nearshoring)</strong> e <strong>Alinhamento Político/Ambiental (Friendshoring)</strong>.
-                </p>
-                <div className="flex flex-col gap-4">
-                  {dbGeo.map((country) => (
-                    <div key={country.name} className="bg-slate-900 border border-slate-800 p-4 rounded-xl hover:border-indigo-500/40 transition-colors">
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-bold text-white text-lg">{country.name}</h3>
-                        <span className="text-xs font-mono px-2 py-1 bg-slate-800 rounded text-slate-300">{country.label}</span>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <span className="w-20">Logística</span>
-                          <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                            <div style={{ width: `${country.logistica}%` }} className="h-full bg-indigo-500"></div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <span className="w-20">Energia Verde</span>
-                          <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                            <div style={{ width: `${country.energia}%` }} className="h-full bg-emerald-500"></div>
-                          </div>
-                        </div>
-                      </div>
+        const ChartMetadata = ({ source, period, note }) => (
+            <div className="mt-4 pt-4 border-t border-slate-800 text-xs font-mono text-slate-400 bg-slate-900/50 p-4 rounded-lg">
+                <div className="flex flex-col sm:flex-row gap-4 justify-between">
+                    <div>
+                        <span className="block text-indigo-400 font-bold mb-1 flex items-center gap-1">
+                            <Icons.BookOpen /> FONTE DOS DADOS
+                        </span>
+                        {source}
                     </div>
-                  ))}
+                    <div>
+                        <span className="block text-indigo-400 font-bold mb-1">PERÍODO ANALISADO</span>
+                        {period}
+                    </div>
                 </div>
-              </div>
-
-              <div className="bg-slate-800/20 border border-slate-800 rounded-2xl p-6 flex flex-col justify-center">
-                 <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                   <Lightbulb className="w-5 h-5 text-amber-400" />
-                   Insight: Powershoring Brasil
-                 </h3>
-                 <p className="text-slate-300 text-sm leading-relaxed mb-4">
-                   O Brasil possui uma vantagem competitiva única chamada <strong>"Arbitragem de Carbono"</strong>. Enquanto a Europa e Ásia lutam para descarbonizar sua matriz energética industrial, o Brasil já oferece energia limpa e barata.
-                 </p>
-                 <p className="text-slate-300 text-sm leading-relaxed">
-                   Indústrias intensivas em energia (alumínio, aço verde, data centers de IA) migrarão para o Brasil não pela mão de obra barata, mas para cumprir metas globais de NetZero.
-                 </p>
-                 <div className="mt-6 pt-6 border-t border-slate-700">
-                   <SourceRef id="CNI-2023" text="CNI: Powershoring e a Neoindustrialização Verde do Brasil" />
-                 </div>
-              </div>
+                {note && (
+                    <div className="mt-3 pt-3 border-t border-slate-800 text-slate-500 italic flex gap-2">
+                        <span className="shrink-0 mt-0.5"><Icons.Info /></span>
+                        <span>NOTA: {note}</span>
+                    </div>
+                )}
             </div>
-          </div>
-        )}
+        );
 
-        {/* === ABA 4: FUTURO DO TRABALHO === */}
-        {activeTab === 'work' && (
-          <div className="space-y-8">
-             <div className="text-center max-w-3xl mx-auto mb-10">
-                <h2 className="text-2xl font-bold text-white mb-2">O Renascimento do Artífice Digital</h2>
-                <p className="text-slate-400">
-                  Ao contrário do medo comum, a tecnologia não está eliminando o trabalhador, mas elevando-o. O "chão de fábrica" está virando um "laboratório de dados".
-                </p>
-             </div>
-
-             <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="h-[350px]">
-                   <ResponsiveContainer width="100%" height="100%">
-                      <BarChart layout="vertical" data={dbLabor} margin={{ left: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
-                        <XAxis type="number" hide />
-                        <YAxis dataKey="name" type="category" width={140} tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                        <Tooltip cursor={{fill: '#1e293b'}} contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
-                        <Bar dataKey="val" radius={[0, 4, 4, 0]}>
-                          {dbLabor.map((entry, index) => (
-                            <React.Fragment key={`cell-${index}`}>
-                               {/* Renderização condicional de cores baseada no valor positivo/negativo */}
-                               {entry.val > 0 ? <path fill="#10b981" /> : <path fill="#ef4444" />} 
-                            </React.Fragment>
-                          ))}
-                        </Bar>
-                      </BarChart>
-                   </ResponsiveContainer>
-                   <div className="text-center text-xs text-slate-500 mt-2">Variação na demanda de habilidades (2025-2030)</div>
+        const InsightCard = ({ title, children }) => (
+            <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-6 mt-6 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-600"></div>
+                <div className="flex items-center gap-2 mb-3 text-indigo-300 font-bold uppercase tracking-wider text-sm">
+                    <Icons.Lightbulb /> Insight Estratégico
                 </div>
-
-                <div className="space-y-6">
-                   <InsightCard title="O Operador Aumentado" type="success">
-                      O novo operário utiliza óculos de Realidade Aumentada (AR) para ver instruções sobrepostas às máquinas. Isso reduz o tempo de treinamento de meses para semanas. O conhecimento tácito dos veteranos é capturado por IA e transformado em tutoriais interativos para os novatos.
-                   </InsightCard>
-
-                   <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl">
-                      <h4 className="font-bold text-white mb-2">A Crise de Talento (Labor Shortage)</h4>
-                      <p className="text-sm text-slate-400 mb-4">
-                        Países desenvolvidos enfrentam um "abismo demográfico". Não há jovens suficientes para substituir os aposentados.
-                      </p>
-                      <div className="flex gap-4 items-center text-sm text-slate-300">
-                         <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                            EUA: 2.1M vagas abertas
-                         </div>
-                         <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                            Alemanha: 400k vagas/ano
-                         </div>
-                      </div>
-                      <SourceRef id="WEF-JOBS" text="World Economic Forum: The Future of Jobs Report 2023" />
-                   </div>
+                <h4 className="text-xl font-bold text-white mb-2">{title}</h4>
+                <div className="text-slate-300 text-sm leading-relaxed">
+                    {children}
                 </div>
-             </div>
-          </div>
-        )}
+            </div>
+        );
 
-      </main>
-      
-      {/* --- FOOTER --- */}
-      <footer className="max-w-7xl mx-auto px-4 mt-20 pt-8 border-t border-slate-800 pb-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center text-slate-500 text-xs font-mono">
-        <div>
-          <p>STRATEGIC FORESIGHT REPORT • BUILD {new Date().getFullYear()}.12.14</p>
-          <p className="mt-1">Generated via Gemini AI • Powered by React & Recharts</p>
-        </div>
-        <div className="flex gap-4 mt-4 md:mt-0">
-           <span>PRIVACIDADE</span>
-           <span>TERMOS</span>
-           <span className="text-indigo-500 cursor-pointer hover:text-indigo-400">EXPORTAR PDF</span>
-        </div>
-      </footer>
-    </div>
-  );
-}
+        // --- APP PRINCIPAL ---
+        function App() {
+            const [activeTab, setActiveTab] = useState('paradigm');
+
+            return (
+                <div className="min-h-screen pb-20 font-sans selection:bg-indigo-500 selection:text-white">
+                    
+                    {/* HEADER */}
+                    <header className="sticky top-0 z-50 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 shadow-2xl">
+                        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-indigo-600 shadow-lg text-white border border-indigo-400">
+                                    <Icons.Globe />
+                                </div>
+                                <div>
+                                    <h1 className="text-xl font-extrabold text-white leading-none">HORIZONTE 2035</h1>
+                                    <div className="text-[11px] text-slate-400 font-mono uppercase tracking-widest font-bold mt-1">
+                                        Foresight Industrial & Design de Futuros
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* NAV */}
+                    <nav className="max-w-7xl mx-auto px-4 mt-8 mb-12">
+                        <div className="p-1.5 bg-slate-900 rounded-xl border border-slate-700 inline-flex flex-wrap gap-2 w-full md:w-auto shadow-xl">
+                            {[
+                                { id: 'paradigm', label: 'Indústria 5.0', icon: <Icons.Box /> },
+                                { id: 'deeptech', label: 'Deep Tech & IA', icon: <Icons.Cpu /> },
+                                { id: 'geo', label: 'Geopolítica', icon: <Icons.Anchor /> },
+                                { id: 'work', label: 'Talento Humano', icon: <Icons.Users /> },
+                            ].map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-bold transition-all duration-200 ${
+                                        activeTab === tab.id 
+                                        ? 'bg-indigo-600 text-white shadow-lg ring-1 ring-indigo-400' 
+                                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                                    }`}
+                                >
+                                    <div className={`w-4 h-4 ${activeTab === tab.id ? 'text-white' : 'text-slate-500'}`}>{tab.icon}</div>
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                    </nav>
+
+                    {/* CONTEÚDO */}
+                    <main className="max-w-7xl mx-auto px-4">
+                        
+                        {/* ABA 1: PARADIGMA */}
+                        {activeTab === 'paradigm' && (
+                            <div className="animate-in fade-in duration-500">
+                                <SectionIntro 
+                                    title="Mudança de Paradigma Industrial"
+                                    subtitle="Do foco no Acionista (4.0) para o foco no Stakeholder (5.0)"
+                                >
+                                    <p>
+                                        Historicamente, a Indústria 4.0 focou obsessivamente na digitalização para <strong>redução de custos</strong> e eficiência técnica. No entanto, choques sistêmicos recentes (pandemias, guerras comerciais) expuseram a fragilidade deste modelo "Just-in-Time".
+                                    </p>
+                                    <p>
+                                        Estamos entrando na era da <strong>Indústria 5.0</strong>. Neste novo modelo, a tecnologia deixa de ser o fim para ser o meio. O objetivo agora é triplo: <strong>Resiliência</strong> (capacidade de adaptação), <strong>Sustentabilidade</strong> (regeneração) e <strong>Foco Humano</strong> (bem-estar do trabalhador).
+                                    </p>
+                                </SectionIntro>
+
+                                <div className="grid lg:grid-cols-2 gap-12 items-start mb-12">
+                                    <div className="bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-2xl h-[500px] flex flex-col">
+                                        <h4 className="text-white font-bold mb-4 flex items-center gap-2">
+                                            <Icons.Box /> Comparativo de Prioridades Estratégicas
+                                        </h4>
+                                        <div className="flex-1">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={dbParadigm}>
+                                                    <PolarGrid stroke={COLORS.grid} />
+                                                    <PolarAngleAxis dataKey="subject" tick={{ fill: COLORS.textMain, fontSize: 12, fontWeight: 700 }} />
+                                                    <PolarRadiusAxis angle={30} domain={[0, 100]} stroke={COLORS.textMuted} tick={false} />
+                                                    <Radar name="Ind. 4.0 (Passado)" dataKey="A" stroke="#94a3b8" strokeWidth={2} strokeDasharray="4 4" fill="#94a3b8" fillOpacity={0.1} />
+                                                    <Radar name="Ind. 5.0 (Futuro)" dataKey="B" stroke="#818cf8" strokeWidth={3} fill="#818cf8" fillOpacity={0.5} />
+                                                    <Legend wrapperStyle={{ paddingTop: '20px', color: '#fff' }} />
+                                                    <Tooltip contentStyle={{ backgroundColor: COLORS.cardBg, borderColor: COLORS.accent, color: '#fff' }} />
+                                                </RadarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                        <ChartMetadata 
+                                            source="Comissão Europeia, Policy Brief: Industry 5.0"
+                                            period="Dados 2022 • Projeção 2030"
+                                            note="A escala (0-100) representa o grau de prioridade estratégica nas agendas de CEOs industriais globais."
+                                        />
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <InsightCard title="A Economia da Redundância">
+                                            <p>Antigamente, ter dois fornecedores para a mesma peça era visto como "desperdício". Hoje, é visto como "seguro operacional".</p>
+                                            <p className="mt-2">Empresas que investiram em redundância de supply chain (Just-in-Case) recuperaram o investimento em média <strong>4x mais rápido</strong> durante interrupções logísticas recentes do que aquelas focadas apenas em custo.</p>
+                                        </InsightCard>
+
+                                        <div className="bg-slate-900 border border-slate-800 p-6 rounded-lg">
+                                            <h4 className="text-white font-bold mb-3">Conceitos Chave</h4>
+                                            <ul className="space-y-3 text-slate-400 text-sm">
+                                                <li className="flex gap-2">
+                                                    <span className="text-indigo-400 font-bold">•</span>
+                                                    <span><strong>Hiper-Eficiência:</strong> Fazer mais com menos (Foco antigo).</span>
+                                                </li>
+                                                <li className="flex gap-2">
+                                                    <span className="text-indigo-400 font-bold">•</span>
+                                                    <span><strong>Resiliência:</strong> Capacidade de continuar operando sob ataque ou crise.</span>
+                                                </li>
+                                                <li className="flex gap-2">
+                                                    <span className="text-indigo-400 font-bold">•</span>
+                                                    <span><strong>Regeneração:</strong> Devolver ao meio ambiente mais do que se extrai (Circularidade).</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ABA 2: DEEP TECH */}
+                        {activeTab === 'deeptech' && (
+                            <div className="animate-in fade-in duration-500">
+                                <SectionIntro 
+                                    title="Convergência Deep Tech"
+                                    subtitle="IA Generativa e Gêmeos Digitais: O fim da tentativa e erro"
+                                >
+                                    <p>
+                                        Deep Tech refere-se a inovações baseadas em descobertas científicas substanciais. Na indústria, o destaque é a fusão entre <strong>IA Generativa</strong> (que cria soluções) e <strong>Gêmeos Digitais</strong> (que testam soluções).
+                                    </p>
+                                    <p>
+                                        Imagine poder construir uma fábrica inteira no metaverso industrial, testar 1 milhão de cenários de falha, treinar robôs e otimizar o fluxo, tudo isso antes de assentar o primeiro tijolo real. Isso reduz o <strong>risco de capital</strong> em níveis nunca vistos.
+                                    </p>
+                                </SectionIntro>
+
+                                <div className="bg-slate-900 border border-slate-700 rounded-2xl p-8 shadow-2xl mb-12">
+                                    <h3 className="text-xl font-bold text-white mb-6">Curva de Adoção Tecnológica (Deep Tech)</h3>
+                                    <div className="h-[400px] w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={dbDeepTech} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                                <defs>
+                                                    <linearGradient id="colorGenAI" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#ec4899" stopOpacity={0.5}/>
+                                                        <stop offset="95%" stopColor="#ec4899" stopOpacity={0}/>
+                                                    </linearGradient>
+                                                    <linearGradient id="colorDT" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.5}/>
+                                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                                    </linearGradient>
+                                                </defs>
+                                                <XAxis dataKey="year" stroke={COLORS.textMuted} tick={{fill: COLORS.textMain}} />
+                                                <YAxis stroke={COLORS.textMuted} tick={{fill: COLORS.textMain}} unit="%" />
+                                                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} vertical={false} />
+                                                <Tooltip contentStyle={{ backgroundColor: COLORS.cardBg, borderColor: COLORS.accent, color: '#fff' }} />
+                                                <Legend wrapperStyle={{ paddingTop: '20px' }}/>
+                                                <Area type="monotone" dataKey="genAI" name="Adoção de IA Generativa Industrial" stroke="#ec4899" fillOpacity={1} fill="url(#colorGenAI)" strokeWidth={3} />
+                                                <Area type="monotone" dataKey="digitalTwins" name="Adoção de Gêmeos Digitais" stroke="#3b82f6" fillOpacity={1} fill="url(#colorDT)" strokeWidth={3} />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <ChartMetadata 
+                                        source="Gartner Emerging Tech Trends & McKinsey Digital"
+                                        period="Histórico 2023 • Previsão até 2030"
+                                        note="Percentual de empresas 'Tier 1' (Líderes de Mercado) com implementação em escala de produção (não apenas pilotos)."
+                                    />
+                                </div>
+                                
+                                <div className="grid md:grid-cols-3 gap-6">
+                                   <div className="bg-slate-900 p-6 rounded-xl border border-slate-700 hover:border-indigo-500 transition-colors">
+                                      <div className="text-pink-400 mb-4"><Icons.Cpu /></div>
+                                      <h3 className="font-bold text-white mb-2 text-lg">Design Generativo</h3>
+                                      <p className="text-sm text-slate-300">Ao invés de desenhar uma peça, o engenheiro define os parâmetros (peso, custo, material) e a IA gera milhares de opções otimizadas.</p>
+                                   </div>
+                                   <div className="bg-slate-900 p-6 rounded-xl border border-slate-700 hover:border-indigo-500 transition-colors">
+                                      <div className="text-blue-400 mb-4"><Icons.Box /></div>
+                                      <h3 className="font-bold text-white mb-2 text-lg">Comissionamento Virtual</h3>
+                                      <p className="text-sm text-slate-300">Testar o software de controle da fábrica conectando-o a um modelo 3D virtual, eliminando bugs antes da instalação física.</p>
+                                   </div>
+                                   <div className="bg-slate-900 p-6 rounded-xl border border-slate-700 hover:border-indigo-500 transition-colors">
+                                      <div className="text-emerald-400 mb-4"><Icons.Leaf /></div>
+                                      <h3 className="font-bold text-white mb-2 text-lg">Simulação Energética</h3>
+                                      <p className="text-sm text-slate-300">Usar o Gêmeo Digital para simular o consumo de energia da planta e ajustar horários de pico para reduzir a pegada de carbono.</p>
+                                   </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ABA 3: GEOPOLÍTICA */}
+                        {activeTab === 'geo' && (
+                          <div className="animate-in fade-in duration-500">
+                            <SectionIntro 
+                                title="A Nova Geografia da Produção"
+                                subtitle="Nearshoring, Friendshoring e Powershoring"
+                            >
+                                <p>
+                                    A globalização irrestrita acabou. As cadeias de suprimento estão sendo redesenhadas. Não basta mais ser barato; é preciso ser <strong>confiável</strong> e <strong>verde</strong>.
+                                </p>
+                                <p>
+                                    Três movimentos definem o cenário: 
+                                    <strong> Nearshoring</strong> (produzir perto do consumo), 
+                                    <strong> Friendshoring</strong> (produzir em países aliados politicamente) e 
+                                    <strong> Powershoring</strong> (produzir onde a energia é limpa e abundante).
+                                </p>
+                            </SectionIntro>
+
+                            <div className="grid md:grid-cols-2 gap-8 mb-12">
+                              <div className="flex flex-col gap-4">
+                                <h3 className="text-xl font-bold text-white mb-2">Índice de Atratividade Industrial</h3>
+                                {dbGeo.map((country) => (
+                                  <div key={country.name} className="bg-slate-900 border border-slate-700 p-6 rounded-xl relative overflow-hidden">
+                                    <div className="flex justify-between items-center mb-4">
+                                      <h3 className="font-bold text-white text-xl">{country.name}</h3>
+                                      <span className="text-xs font-bold px-3 py-1 bg-slate-800 border border-slate-600 rounded-full text-indigo-300 uppercase tracking-wide">
+                                        {country.label}
+                                      </span>
+                                    </div>
+                                    <div className="space-y-4">
+                                      <div>
+                                        <div className="flex justify-between text-xs text-slate-300 font-bold mb-1">
+                                            <span>Eficiência Logística (Tempo)</span>
+                                            <span>{country.logistica}/100</span>
+                                        </div>
+                                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                                          <div style={{ width: `${country.logistica}%` }} className="h-full bg-indigo-500"></div>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="flex justify-between text-xs text-slate-300 font-bold mb-1">
+                                            <span>Matriz Energética Verde (ESG)</span>
+                                            <span>{country.energia}/100</span>
+                                        </div>
+                                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                                          <div style={{ width: `${country.energia}%` }} className="h-full bg-emerald-500"></div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                                <ChartMetadata 
+                                    source="WTO World Trade Report & Deloitte Supply Chain Matrix"
+                                    period="Análise 2024"
+                                    note="Pontuação baseada em proximidade com grandes mercados consumidores (Logística) e % de renováveis na matriz elétrica (Energia)."
+                                />
+                              </div>
+
+                              <div className="space-y-6">
+                                <InsightCard title="A Oportunidade do Brasil: Powershoring">
+                                   <p>O Brasil possui uma vantagem competitiva única chamada <strong>"Arbitragem de Carbono"</strong>.</p>
+                                   <p className="mt-2">Enquanto a Europa e Ásia lutam e gastam bilhões para descarbonizar sua energia, o Brasil já oferece energia limpa em escala. Indústrias eletrointensivas (Aço Verde, Vidro, Data Centers de IA) migrarão para o Brasil não pela mão de obra, mas para cumprir metas globais de NetZero.</p>
+                                </InsightCard>
+                                
+                                <div className="bg-slate-900/50 p-6 rounded-lg border border-slate-800 text-sm text-slate-400">
+                                    <h4 className="text-white font-bold mb-2 flex items-center gap-2"><Icons.Anchor /> Glossário Rápido</h4>
+                                    <ul className="space-y-2">
+                                        <li><strong className="text-indigo-400">Offshoring:</strong> O modelo antigo. Mandar produção para o local mais barato (geralmente Ásia), ignorando riscos.</li>
+                                        <li><strong className="text-indigo-400">Nearshoring:</strong> Trazer para perto (ex: México produzindo para EUA) para reduzir tempo de entrega.</li>
+                                        <li><strong className="text-indigo-400">Powershoring:</strong> Mover a fábrica para onde a energia verde é abundante.</li>
+                                    </ul>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* ABA 4: FUTURO DO TRABALHO */}
+                        {activeTab === 'work' && (
+                          <div className="animate-in fade-in duration-500">
+                             <SectionIntro 
+                                title="O Renascimento do Artífice Digital"
+                                subtitle="Superagência: Humanos aumentados por máquinas"
+                            >
+                                <p>
+                                    Existe um medo comum de que "robôs vão roubar nossos empregos". Os dados mostram um cenário mais nuançado: as máquinas vão assumir o <strong>tédio</strong> e o <strong>perigo</strong>, liberando humanos para a resolução de problemas complexos.
+                                </p>
+                                <p>
+                                    Não estamos caminhando para a fábrica "sem luz" (totalmente automatizada), mas para a fábrica "centauro", onde a criatividade humana é amplificada pela força e precisão da IA e da Robótica.
+                                </p>
+                             </SectionIntro>
+
+                             <div className="grid lg:grid-cols-2 gap-12 items-center mb-12">
+                                <div className="bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-2xl h-[500px] flex flex-col">
+                                   <h4 className="text-white font-bold mb-6">Variação na Demanda por Competências (2025-2030)</h4>
+                                   <div className="flex-1">
+                                       <ResponsiveContainer width="100%" height="100%">
+                                          <BarChart layout="vertical" data={dbLabor} margin={{right: 50, left: 20}}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} horizontal={false} />
+                                            <XAxis type="number" hide />
+                                            <YAxis dataKey="name" type="category" width={140} tick={{ fill: '#ffffff', fontSize: 13, fontWeight: 'bold' }} />
+                                            <Tooltip cursor={{fill: '#334155', opacity: 0.2}} contentStyle={{ backgroundColor: COLORS.cardBg, borderColor: COLORS.accent, color: '#fff' }} />
+                                            <Bar dataKey="val" radius={[4, 4, 4, 4]}>
+                                              <LabelList dataKey="val" position="right" fill="#ffffff" fontWeight="bold" fontSize={14} formatter={(val) => val > 0 ? `+${val}%` : `${val}%`} />
+                                              {dbLabor.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.val > 0 ? COLORS.success : COLORS.danger} stroke="#ffffff" strokeWidth={1} />
+                                              ))}
+                                            </Bar>
+                                          </BarChart>
+                                       </ResponsiveContainer>
+                                   </div>
+                                   <ChartMetadata 
+                                        source="World Economic Forum: The Future of Jobs Report"
+                                        period="Projeção Global 2023-2027"
+                                        note="Valores positivos (Verde) indicam crescimento na procura por profissionais. Valores negativos (Vermelho) indicam obsolescência da função."
+                                    />
+                                </div>
+
+                                <div className="space-y-6">
+                                   <InsightCard title="O Operador Aumentado">
+                                      <p>O trabalhador do futuro não precisa ser um programador sênior. Com ferramentas "No-Code" e óculos de Realidade Aumentada, um operador pode programar um robô apenas movendo seus braços.</p>
+                                      <p className="mt-2">Isso democratiza a tecnologia e permite que o conhecimento tático do chão de fábrica seja capturado e valorizado.</p>
+                                   </InsightCard>
+                                   
+                                   <div className="bg-slate-900 border border-slate-700 p-6 rounded-xl">
+                                      <h4 className="font-bold text-white mb-2 text-lg">A Crise Oculta: Escassez de Talento</h4>
+                                      <p className="text-sm text-slate-300 leading-relaxed">
+                                        O maior risco para a indústria não é a tecnologia, mas a demografia. Países como EUA, Alemanha e Japão enfrentam um envelhecimento rápido da força de trabalho. 
+                                      </p>
+                                      <div className="mt-4 p-3 bg-slate-800 rounded border-l-4 border-red-500 text-xs text-slate-200">
+                                        <strong>DADO ALARMANTE:</strong> Estima-se que 2.1 milhões de vagas industriais nos EUA ficarão vazias até 2030 por falta de qualificação.
+                                      </div>
+                                   </div>
+                                </div>
+                             </div>
+                          </div>
+                        )}
+                        
+                    </main>
+
+                    {/* FOOTER */}
+                    <footer className="max-w-7xl mx-auto px-4 mt-20 pt-8 border-t border-slate-800 text-center text-slate-500 text-xs font-mono pb-8">
+                        <p>FUTURES INTELLIGENCE LAB • 2025 • Versão Educativa</p>
+                        <p className="mt-2">Desenvolvido com React & Recharts para visualização de dados de alto impacto.</p>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
